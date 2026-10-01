@@ -16,3 +16,9 @@ Learning SQL and data viz by building a CSV → MySQL → Python → D3 pipeline
 ## Run
     python3 python/run_query.py sql/ipl/top_run_scorers.sql viz/data/top_run_scorers.json
     cd viz && python3 -m http.server 8000
+
+## IPL dashboard (11 charts, ECharts + Tailwind)
+Batting: top scorers, radar comparison, sixes vs fours, strike-rate bubbles.
+Bowling: top wicket takers, dismissal rose chart.
+Game flow: runs per season, phase run rate, over-by-over heatmap.
+Teams: team runs stacked area, venue treemap.
