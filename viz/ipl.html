@@ -1,0 +1,106 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IPL Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<style>
+body{margin:0;font-family:system-ui,sans-serif;color:#eee;min-height:100vh;
+ background:radial-gradient(circle at 20% 0%,#2b1b4d,#0b0c14 60%)}
+main{max-width:1000px;margin:auto;padding:24px}
+h1{margin:0}.sub{color:#9a9db5;margin:4px 0 20px}a{color:#f5a623}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:16px}
+.card{background:rgba(255,255,255,.06);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);
+ border-radius:16px;padding:16px}
+.card h3{margin:0 0 2px}.card p{margin:0 0 8px;color:#9a9db5;font-size:12px}
+svg{width:100%;height:auto}text{fill:#9a9db5;font-size:11px}.axis path,.axis line{stroke:#444}
+#tip{position:fixed;background:#000;padding:6px 10px;border-radius:6px;font-size:12px;pointer-events:none;opacity:0}
+</style></head><body><main>
+<h1>🏏 IPL Dashboard</h1>
+<p class="sub">87,074 deliveries · 5 seasons · MySQL → Python → D3 · <a href="index.html">← back</a></p>
+<div class="grid">
+<div class="card"><h3>Runs per season</h3><p>Total runs; hover for avg per match</p><svg id="a" viewBox="0 0 460 280"></svg></div>
+<div class="card"><h3>Top 10 run scorers</h3><p>Alias-fixed player names</p><svg id="b" viewBox="0 0 460 280"></svg></div>
+<div class="card"><h3>Top 10 wicket takers</h3><p>Excl. run outs & retirements</p><svg id="c" viewBox="0 0 460 280"></svg></div>
+<div class="card"><h3>Run rate by phase</h3><p>Runs per over: Powerplay / Middle / Death</p><svg id="d" viewBox="0 0 460 280"></svg></div>
+<div class="card"><h3>Sixes vs fours</h3><p>Top 10 six hitters</p><svg id="e" viewBox="0 0 460 280"></svg></div>
+<div class="card"><h3>Strike rate vs runs</h3><p>Bubble = balls faced (min 500)</p><svg id="f" viewBox="0 0 460 280"></svg></div>
+</div></main><div id="tip"></div>
+<script>
+const tip=d3.select("#tip"),W=460,H=280;
+const show=(e,t)=>tip.style("opacity",1).style("left",e.clientX+12+"px").style("top",e.clientY+12+"px").html(t);
+const hide=()=>tip.style("opacity",0);
+const canvas=(id,m)=>({g:d3.select("#"+id).append("g").attr("transform",`translate(${m.l},${m.t})`),w:W-m.l-m.r,h:H-m.t-m.b});
+const ax=(g,sel)=>sel.attr("class","axis");
+const C=["#f5a623","#6c8cff","#ff6b9d","#3ddc97"];
+
+// 1 runs per season (area + line)
+d3.json("data/runs_per_season.json").then(d=>{
+  const {g,w,h}=canvas("a",{l:55,r:15,t:10,b:25});
+  const x=d3.scalePoint(d.map(r=>String(r.label)),[0,w]).padding(.3);
+  const y=d3.scaleLinear([0,d3.max(d,r=>r.value)*1.1],[h,0]);
+  g.append("g").attr("class","axis").attr("transform",`translate(0,${h})`).call(d3.axisBottom(x));
+  g.append("g").attr("class","axis").call(d3.axisLeft(y).ticks(5));
+  const P=r=>x(String(r.label));
+  g.append("path").datum(d).attr("fill","#f5a62333").attr("d",d3.area().x(P).y0(h).y1(r=>y(r.value)).curve(d3.curveMonotoneX));
+  g.append("path").datum(d).attr("fill","none").attr("stroke",C[0]).attr("stroke-width",3).attr("d",d3.line().x(P).y(r=>y(r.value)).curve(d3.curveMonotoneX));
+  g.selectAll("circle").data(d).join("circle").attr("cx",P).attr("cy",r=>y(r.value)).attr("r",6).attr("fill",C[0])
+   .on("mousemove",(e,r)=>show(e,`<b>${r.label}</b><br>${r.value} runs<br>${r.avg_per_match}/match`)).on("mouseleave",hide);
+});
+
+// horizontal bars helper
+function hb(id,url,col,unit){
+  d3.json(url).then(d=>{
+    const {g,w,h}=canvas(id,{l:115,r:35,t:5,b:5});
+    const x=d3.scaleLinear([0,d3.max(d,r=>r.value)],[0,w]);
+    const y=d3.scaleBand(d.map(r=>r.label),[0,h]).padding(.25);
+    g.selectAll("rect").data(d).join("rect").attr("y",r=>y(r.label)).attr("height",y.bandwidth()).attr("rx",4).attr("fill",col).attr("width",0)
+     .on("mousemove",(e,r)=>show(e,`<b>${r.label}</b><br>${r.value} ${unit}`)).on("mouseleave",hide)
+     .transition().duration(900).attr("width",r=>x(r.value));
+    g.selectAll(".l").data(d).join("text").attr("x",-6).attr("y",r=>y(r.label)+y.bandwidth()/2+4).attr("text-anchor","end").style("fill","#eee").text(r=>r.label);
+    g.selectAll(".v").data(d).join("text").attr("x",r=>x(r.value)+4).attr("y",r=>y(r.label)+y.bandwidth()/2+4).text(r=>r.value);
+  });
+}
+hb("b","data/top_run_scorers.json",C[1],"runs");
+hb("c","data/top_wickets.json",C[2],"wickets");
+
+// phase bars
+d3.json("data/phase_run_rate.json").then(d=>{
+  const {g,w,h}=canvas("d",{l:35,r:10,t:10,b:25});
+  const x=d3.scaleBand(d.map(r=>r.label),[0,w]).padding(.35);
+  const y=d3.scaleLinear([0,d3.max(d,r=>r.value)*1.15],[h,0]);
+  g.append("g").attr("class","axis").attr("transform",`translate(0,${h})`).call(d3.axisBottom(x));
+  g.append("g").attr("class","axis").call(d3.axisLeft(y).ticks(5));
+  g.selectAll("rect").data(d).join("rect").attr("x",r=>x(r.label)).attr("width",x.bandwidth()).attr("rx",6)
+   .attr("fill",(r,i)=>[C[3],C[1],C[2]][i]).attr("y",h).attr("height",0)
+   .on("mousemove",(e,r)=>show(e,`<b>${r.label}</b><br>${r.value} runs/over`)).on("mouseleave",hide)
+   .transition().duration(900).attr("y",r=>y(r.value)).attr("height",r=>h-y(r.value));
+  g.selectAll(".v").data(d).join("text").attr("x",r=>x(r.label)+x.bandwidth()/2).attr("y",r=>y(r.value)-5).attr("text-anchor","middle").style("fill","#eee").text(r=>r.value);
+});
+
+// sixes vs fours
+d3.json("data/boundaries.json").then(d=>{
+  const {g,w,h}=canvas("e",{l:115,r:35,t:5,b:5});
+  const mx=d3.max(d,r=>Math.max(r.sixes,r.fours));
+  const x=d3.scaleLinear([0,mx],[0,w]);
+  const y=d3.scaleBand(d.map(r=>r.label),[0,h]).padding(.2), bh=y.bandwidth()/2;
+  [["sixes",C[0],0],["fours",C[1],bh]].forEach(([k,c,o])=>{
+    g.selectAll(".r"+k).data(d).join("rect").attr("y",r=>y(r.label)+o).attr("height",bh-1).attr("rx",3).attr("fill",c).attr("width",r=>x(r[k]))
+     .on("mousemove",(e,r)=>show(e,`<b>${r.label}</b><br>${r.sixes} sixes · ${r.fours} fours`)).on("mouseleave",hide);
+  });
+  g.selectAll(".l").data(d).join("text").attr("x",-6).attr("y",r=>y(r.label)+bh+3).attr("text-anchor","end").style("fill","#eee").text(r=>r.label);
+  g.append("text").attr("x",w-60).attr("y",h-4).style("fill",C[0]).text("■ sixes").append("tspan").attr("dx",8).style("fill",C[1]).text("■ fours");
+});
+
+// scatter
+d3.json("data/sr_scatter.json").then(d=>{
+  const {g,w,h}=canvas("f",{l:45,r:15,t:10,b:30});
+  const x=d3.scaleLinear(d3.extent(d,r=>r.runs),[10,w-10]).nice();
+  const y=d3.scaleLinear([d3.min(d,r=>r.strike_rate)-5,d3.max(d,r=>r.strike_rate)+5],[h,0]);
+  const s=d3.scaleSqrt(d3.extent(d,r=>r.balls),[4,16]);
+  g.append("g").attr("class","axis").attr("transform",`translate(0,${h})`).call(d3.axisBottom(x).ticks(5));
+  g.append("g").attr("class","axis").call(d3.axisLeft(y).ticks(5));
+  g.append("text").attr("x",w/2).attr("y",h+26).attr("text-anchor","middle").text("runs");
+  g.selectAll("circle").data(d).join("circle").attr("cx",r=>x(r.runs)).attr("cy",r=>y(r.strike_rate)).attr("r",r=>s(r.balls))
+   .attr("fill",C[2]).attr("fill-opacity",.6).attr("stroke","#fff").attr("stroke-opacity",.3)
+   .on("mousemove",(e,r)=>show(e,`<b>${r.label}</b><br>${r.runs} runs · ${r.balls} balls<br>SR ${r.strike_rate}`)).on("mouseleave",hide);
+});
+</script></body></html>

@@ -1,0 +1,242 @@
+[
+  {
+    "label": "Shubman Gill",
+    "runs": 3181.0,
+    "balls": 2083.0,
+    "strike_rate": 152.7
+  },
+  {
+    "label": "Kohli",
+    "runs": 3053.0,
+    "balls": 2092.0,
+    "strike_rate": 145.9
+  },
+  {
+    "label": "Buttler",
+    "runs": 2678.0,
+    "balls": 1791.0,
+    "strike_rate": 149.5
+  },
+  {
+    "label": "Rahul",
+    "runs": 2549.0,
+    "balls": 1781.0,
+    "strike_rate": 143.1
+  },
+  {
+    "label": "Sai Sudharsan",
+    "runs": 2515.0,
+    "balls": 1687.0,
+    "strike_rate": 149.1
+  },
+  {
+    "label": "Jaiswal",
+    "runs": 2304.0,
+    "balls": 1485.0,
+    "strike_rate": 155.2
+  },
+  {
+    "label": "Suryakumar Yadav",
+    "runs": 2207.0,
+    "balls": 1338.0,
+    "strike_rate": 164.9
+  },
+  {
+    "label": "Abhishek Sharma",
+    "runs": 2137.0,
+    "balls": 1216.0,
+    "strike_rate": 175.7
+  },
+  {
+    "label": "Ishan Kishan",
+    "runs": 2135.0,
+    "balls": 1432.0,
+    "strike_rate": 149.1
+  },
+  {
+    "label": "Samson",
+    "runs": 2111.0,
+    "balls": 1384.0,
+    "strike_rate": 152.5
+  },
+  {
+    "label": "Klaasen",
+    "runs": 2038.0,
+    "balls": 1205.0,
+    "strike_rate": 169.1
+  },
+  {
+    "label": "Gaikwad",
+    "runs": 2000.0,
+    "balls": 1458.0,
+    "strike_rate": 137.2
+  },
+  {
+    "label": "Pooran",
+    "runs": 1921.0,
+    "balls": 1149.0,
+    "strike_rate": 167.2
+  },
+  {
+    "label": "Shreyas Iyer",
+    "runs": 1854.0,
+    "balls": 1176.0,
+    "strike_rate": 157.7
+  },
+  {
+    "label": "du Plessis",
+    "runs": 1838.0,
+    "balls": 1276.0,
+    "strike_rate": 144.0
+  },
+  {
+    "label": "Tilak Varma",
+    "runs": 1832.0,
+    "balls": 1262.0,
+    "strike_rate": 145.2
+  },
+  {
+    "label": "Prabhsimran",
+    "runs": 1793.0,
+    "balls": 1115.0,
+    "strike_rate": 160.8
+  },
+  {
+    "label": "Shivam Dube",
+    "runs": 1730.0,
+    "balls": 1133.0,
+    "strike_rate": 152.7
+  },
+  {
+    "label": "Rohit",
+    "runs": 1707.0,
+    "balls": 1201.0,
+    "strike_rate": 142.1
+  },
+  {
+    "label": "Mitchell Marsh",
+    "runs": 1630.0,
+    "balls": 1052.0,
+    "strike_rate": 154.9
+  },
+  {
+    "label": "Rajat Patidar",
+    "runs": 1540.0,
+    "balls": 917.0,
+    "strike_rate": 167.9
+  },
+  {
+    "label": "Parag",
+    "runs": 1540.0,
+    "balls": 1016.0,
+    "strike_rate": 151.6
+  },
+  {
+    "label": "Markram",
+    "runs": 1525.0,
+    "balls": 1115.0,
+    "strike_rate": 136.8
+  },
+  {
+    "label": "Hardik Pandya",
+    "runs": 1479.0,
+    "balls": 1061.0,
+    "strike_rate": 139.4
+  },
+  {
+    "label": "Rahane",
+    "runs": 1426.0,
+    "balls": 1025.0,
+    "strike_rate": 139.1
+  },
+  {
+    "label": "Padikkal",
+    "runs": 1386.0,
+    "balls": 998.0,
+    "strike_rate": 138.9
+  },
+  {
+    "label": "Pant",
+    "runs": 1368.0,
+    "balls": 941.0,
+    "strike_rate": 145.4
+  },
+  {
+    "label": "Head",
+    "runs": 1351.0,
+    "balls": 767.0,
+    "strike_rate": 176.1
+  },
+  {
+    "label": "Rinku Singh",
+    "runs": 1321.0,
+    "balls": 880.0,
+    "strike_rate": 150.1
+  },
+  {
+    "label": "Miller",
+    "runs": 1314.0,
+    "balls": 911.0,
+    "strike_rate": 144.2
+  },
+  {
+    "label": "Venkatesh Iyer",
+    "runs": 1307.0,
+    "balls": 893.0,
+    "strike_rate": 146.4
+  },
+  {
+    "label": "Stoinis",
+    "runs": 1288.0,
+    "balls": 820.0,
+    "strike_rate": 157.1
+  },
+  {
+    "label": "Nitish Rana",
+    "runs": 1258.0,
+    "balls": 861.0,
+    "strike_rate": 146.1
+  },
+  {
+    "label": "Dhruv Jurel",
+    "runs": 1194.0,
+    "balls": 774.0,
+    "strike_rate": 154.3
+  },
+  {
+    "label": "de Kock",
+    "runs": 1185.0,
+    "balls": 827.0,
+    "strike_rate": 143.3
+  },
+  {
+    "label": "Ayush Badoni",
+    "runs": 1177.0,
+    "balls": 829.0,
+    "strike_rate": 142.0
+  },
+  {
+    "label": "Jadeja",
+    "runs": 1140.0,
+    "balls": 837.0,
+    "strike_rate": 136.2
+  },
+  {
+    "label": "Tim David",
+    "runs": 1137.0,
+    "balls": 635.0,
+    "strike_rate": 179.1
+  },
+  {
+    "label": "Axar",
+    "runs": 1136.0,
+    "balls": 801.0,
+    "strike_rate": 141.8
+  },
+  {
+    "label": "Jitesh Sharma",
+    "runs": 1108.0,
+    "balls": 724.0,
+    "strike_rate": 153.0
+  }
+]

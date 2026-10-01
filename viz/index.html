@@ -1,23 +1,88 @@
-<!DOCTYPE html>
-<meta charset="utf-8">
-<title>YC companies per year</title>
-<script src="https://d3js.org/d3.v7.min.js"></script>
-<h2>Y Combinator companies funded per year</h2>
-<svg width="800" height="400"></svg>
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SQL → D3 | Yash</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<style>
+:root{--bg:#0e0f13;--card:#171921;--tx:#e8e8ee;--mut:#8b8fa3;--a:#f5a623}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+main{max-width:900px;margin:auto;padding:24px}
+h1{margin:0 0 4px}.sub{color:var(--mut);margin:0 0 20px}
+nav button{background:var(--card);color:var(--tx);border:1px solid #2a2d3a;padding:8px 18px;border-radius:20px;cursor:pointer;margin-right:8px;font-size:14px}
+nav button.on{background:var(--a);color:#111;border-color:var(--a)}
+.stats{display:flex;gap:12px;margin:20px 0;flex-wrap:wrap}
+.stat{background:var(--card);padding:12px 18px;border-radius:12px}
+.stat b{display:block;font-size:22px;color:var(--a)}.stat span{color:var(--mut);font-size:12px}
+.card{background:var(--card);border-radius:14px;padding:18px;margin-bottom:16px;overflow-x:auto}
+h3{margin:0 0 8px}li{margin:6px 0;color:#cfd1dc;line-height:1.4}
+.sec{display:none}.sec.on{display:block}
+svg{width:100%;height:auto}text{fill:var(--mut);font-size:12px}
+.bar{fill:var(--a)}.bar:hover{fill:#ffd27a}
+#tip{position:fixed;background:#000;padding:6px 10px;border-radius:6px;font-size:12px;pointer-events:none;opacity:0}
+</style></head><body><main>
+<h1>SQL → D3 Pipeline</h1>
+<p class="sub">CSV → MySQL (staging → clean) → Python → JSON → D3</p>
+<nav><button class="on" data-t="yc">YC Startups</button><button data-t="ipl">IPL</button></nav>
+
+<section id="yc" class="sec on">
+ <div class="stats"><div class="stat"><b>6,200</b><span>startups</span></div>
+ <div class="stat"><b>24</b><span>batch years</span></div></div>
+ <div class="card"><h3>Startups per batch year</h3><svg id="c-yc" viewBox="0 0 800 380"></svg></div>
+ <div class="card"><h3>What I solved</h3><ul>
+  <li>Loaded raw CSV into <code>stg_yc</code>, then built typed <code>clean_yc</code>.</li>
+  <li>Verified row count: grouped totals add up to 6,200.</li>
+  <li>Automated export with <code>extract.py</code> (SQL → JSON) feeding the chart.</li>
+ </ul></div>
+</section>
+
+<section id="ipl" class="sec"><p><a style="color:#f5a623" href="ipl.html">Open full IPL dashboard →</a></p>
+ <div class="stats"><div class="stat"><b>87,074</b><span>deliveries</span></div>
+ <div class="stat"><b>365</b><span>matches</span></div>
+ <div class="stat"><b>5</b><span>seasons</span></div></div>
+ <div class="card"><h3>Top 10 run scorers</h3><svg id="c-ipl" viewBox="0 0 800 420"></svg></div>
+ <div class="card"><h3>What I solved</h3><ul>
+  <li>Loaded 5 season files into <code>stg_ipl</code>, verified row counts per season.</li>
+  <li>Built <code>clean_ipl</code>: typed columns, parsed dates, split over.ball.</li>
+  <li>Found incomplete matches and built <code>clean_matches</code> (365 rows).</li>
+  <li>Same player under different names: fixed with a <code>player_alias</code> table + LEFT JOIN + COALESCE.</li>
+ </ul></div>
+</section>
+</main><div id="tip"></div>
 <script>
-d3.json("data.json").then(data => {
-  const svg = d3.select("svg"), m = 50, w = 800, h = 400;
-  const x = d3.scaleBand().domain(data.map(d => d.label)).range([m, w - 20]).padding(0.2);
-  const y = d3.scaleLinear().domain([0, d3.max(data, d => d.value)]).range([h - 40, 20]);
+const tip=d3.select("#tip");
+const show=(e,t)=>tip.style("opacity",1).style("left",e.clientX+12+"px").style("top",e.clientY+12+"px").text(t);
+const hide=()=>tip.style("opacity",0);
 
-  svg.selectAll("rect").data(data).join("rect")
-    .attr("x", d => x(d.label)).attr("y", d => y(d.value))
-    .attr("width", x.bandwidth()).attr("height", d => h - 40 - y(d.value))
-    .attr("fill", "steelblue");
-
-  svg.append("g").attr("transform", `translate(0,${h - 40})`)
-    .call(d3.axisBottom(x)).selectAll("text")
-    .attr("transform", "rotate(-45)").style("text-anchor", "end");
-  svg.append("g").attr("transform", `translate(${m},0)`).call(d3.axisLeft(y));
+function vbars(id,data){
+  const svg=d3.select(id),m={l:50,r:10,t:10,b:40},w=800-m.l-m.r,h=380-m.t-m.b;
+  const x=d3.scaleBand(data.map(d=>d.label),[0,w]).padding(.2);
+  const y=d3.scaleLinear([0,d3.max(data,d=>d.value)],[h,0]).nice();
+  const g=svg.append("g").attr("transform",`translate(${m.l},${m.t})`);
+  g.append("g").attr("transform",`translate(0,${h})`).call(d3.axisBottom(x)).selectAll("text").attr("transform","rotate(-45)").style("text-anchor","end");
+  g.append("g").call(d3.axisLeft(y).ticks(6));
+  g.selectAll("rect").data(data).join("rect").attr("class","bar").attr("x",d=>x(d.label)).attr("width",x.bandwidth())
+   .attr("y",h).attr("height",0).on("mousemove",(e,d)=>show(e,d.label+": "+d.value)).on("mouseleave",hide)
+   .transition().duration(800).attr("y",d=>y(d.value)).attr("height",d=>h-y(d.value));
+}
+function hbars(id,data){
+  const svg=d3.select(id),m={l:150,r:60,t:10,b:10},w=800-m.l-m.r,h=420-m.t-m.b;
+  const x=d3.scaleLinear([0,d3.max(data,d=>d.value)],[0,w]);
+  const y=d3.scaleBand(data.map(d=>d.label),[0,h]).padding(.2);
+  const g=svg.append("g").attr("transform",`translate(${m.l},${m.t})`);
+  g.selectAll("rect").data(data).join("rect").attr("class","bar").attr("y",d=>y(d.label)).attr("height",y.bandwidth())
+   .attr("width",0).on("mousemove",(e,d)=>show(e,d.label+": "+d.value+" runs")).on("mouseleave",hide)
+   .transition().duration(800).attr("width",d=>x(d.value));
+  g.selectAll(".n").data(data).join("text").attr("x",-8).attr("y",d=>y(d.label)+y.bandwidth()/2+4).attr("text-anchor","end").style("fill","#e8e8ee").text(d=>d.label);
+  g.selectAll(".v").data(data).join("text").attr("x",d=>x(d.value)+6).attr("y",d=>y(d.label)+y.bandwidth()/2+4).text(d=>d.value);
+}
+const loaded={};
+function load(t){
+  if(loaded[t])return;loaded[t]=1;
+  if(t==="yc")d3.json("data.json").then(r=>{const k=Object.keys(r[0]);vbars("#c-yc",r.map(d=>({label:String(d[k[0]]),value:+d[k[1]]})))});
+  else d3.json("data/top_run_scorers.json").then(r=>hbars("#c-ipl",r));
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button,.sec").forEach(e=>e.classList.remove("on"));
+  b.classList.add("on");document.getElementById(b.dataset.t).classList.add("on");load(b.dataset.t);
 });
-</script>
+load("yc");
+</script></body></html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>YC companies per year</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<h2>Y Combinator companies funded per year</h2>
+<svg width="800" height="400"></svg>
+<script>
+d3.json("data.json").then(data => {
+  const svg = d3.select("svg"), m = 50, w = 800, h = 400;
+  const x = d3.scaleBand().domain(data.map(d => d.label)).range([m, w - 20]).padding(0.2);
+  const y = d3.scaleLinear().domain([0, d3.max(data, d => d.value)]).range([h - 40, 20]);
+
+  svg.selectAll("rect").data(data).join("rect")
+    .attr("x", d => x(d.label)).attr("y", d => y(d.value))
+    .attr("width", x.bandwidth()).attr("height", d => h - 40 - y(d.value))
+    .attr("fill", "steelblue");
+
+  svg.append("g").attr("transform", `translate(0,${h - 40})`)
+    .call(d3.axisBottom(x)).selectAll("text")
+    .attr("transform", "rotate(-45)").style("text-anchor", "end");
+  svg.append("g").attr("transform", `translate(${m},0)`).call(d3.axisLeft(y));
+});
+</script>
