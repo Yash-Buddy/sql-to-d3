@@ -32,3 +32,8 @@ Teams: team runs stacked area, venue treemap.
 - Staging vs clean tables, and verifying counts after every load
 - Fixing messy real data (player aliases) with LEFT JOIN + COALESCE
 - Exporting SQL results to JSON with Python for browser charts
+
+## Screenshots
+![IPL dark dashboard](docs/ipl-dark.png)
+![IPL light report](docs/ipl-light.png)
+![YC chart](docs/yc.png)
