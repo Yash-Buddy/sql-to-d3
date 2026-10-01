@@ -22,3 +22,13 @@ Batting: top scorers, radar comparison, sixes vs fours, strike-rate bubbles.
 Bowling: top wicket takers, dismissal rose chart.
 Game flow: runs per season, phase run rate, over-by-over heatmap.
 Teams: team runs stacked area, venue treemap.
+
+## Screenshots
+![IPL dark dashboard](docs/ipl-dark.png)
+![IPL light report](docs/ipl-light.png)
+![YC chart](docs/yc.png)
+
+## What I learned
+- Staging vs clean tables, and verifying counts after every load
+- Fixing messy real data (player aliases) with LEFT JOIN + COALESCE
+- Exporting SQL results to JSON with Python for browser charts

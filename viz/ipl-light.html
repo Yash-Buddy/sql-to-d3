@@ -1,0 +1,146 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IPL Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+body{font-family:'Outfit',sans-serif;background:#c9cbd1;color:#1d1f27}
+.shell{background:linear-gradient(120deg,#d8efe4 0%,#eee9f3 45%,#cfd3f5 100%);border-radius:28px}
+.panel{background:#e3f3ea;border-radius:24px}
+.main{background:rgba(255,255,255,.7);border-radius:24px}
+.dist{background:#d5d9f7;border-radius:24px}
+.pill{background:#fff;border-radius:999px;padding:6px 16px;font-size:14px}
+.pill.on{background:#14161c;color:#fff}
+.ct{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;cursor:pointer}
+.ct i{font-style:normal;width:44px;height:44px;border-radius:50%;background:#f1f8f4;display:grid;place-items:center;font-size:18px}
+.ct.on i{background:#14161c;color:#fff}
+.met{display:flex;align-items:center;gap:10px;background:#f1f8f4;border-radius:16px;padding:10px 12px;cursor:pointer;border:2px solid transparent;width:100%;text-align:left}
+.met.on{border-color:#14161c}
+.met b{font-weight:500;font-size:13px;display:block}.met span{font-size:11px;color:#777}
+.seg{flex:1;padding:6px 8px 0;border-left:1px solid #9aa;cursor:pointer;color:#777;transition:.2s}
+.seg.on{color:#14161c}.seg .pct{font-size:14px}.seg .lab{font-size:12px;font-weight:500;margin-bottom:4px}
+.seg .ticks{height:26px;background:repeating-linear-gradient(90deg,#8a8f9c 0 1px,transparent 1px 6px)}
+.seg.on .ticks{background:repeating-linear-gradient(90deg,#14161c 0 2px,transparent 2px 6px)}
+.tag{font-size:11px;background:#dff5e8;color:#1f8a52;border-radius:8px;padding:2px 6px}
+</style></head>
+<body><div class="p-3 md:p-6"><div class="shell max-w-6xl mx-auto p-5 md:p-7">
+
+<div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+  <span class="font-semibold text-lg">🏏 IPL<span class="text-orange-500">Stats</span></span>
+  <div class="flex gap-2"><a class="pill" href="index.html">Home</a><a class="pill on" href="#">Report</a><a class="pill" href="ipl.html">Dark view</a></div>
+</div>
+<h1 class="text-4xl md:text-5xl font-light mb-1">IPL Performance Report</h1>
+<p class="text-gray-500 mb-5">Ball-by-ball data · MySQL → Python → ECharts. Click a season to explore.</p>
+
+<div id="strip" class="flex mb-5"></div>
+
+<div class="grid md:grid-cols-[280px_1fr] gap-4">
+  <aside class="panel p-5">
+    <h3 class="font-medium">Chart type</h3><p class="text-xs text-gray-500 mb-3">Switch how the data is drawn</p>
+    <div id="types" class="grid grid-cols-4 gap-2 mb-6"></div>
+    <h3 class="font-medium">Displaying</h3><p class="text-xs text-gray-500 mb-3">Pick a metric</p>
+    <div id="mets" class="space-y-2"></div>
+  </aside>
+
+  <section class="space-y-4">
+    <div class="main p-5">
+      <h3 class="text-lg font-medium">Scoring overview</h3><p class="text-xs text-gray-500 mb-3">Your selected season and phase run rates</p>
+      <div class="grid md:grid-cols-[1.1fr_1fr_1fr] gap-4 items-center">
+        <div><p class="text-sm text-gray-500">Runs per match</p>
+          <div class="flex items-end gap-3"><span id="big" class="text-7xl font-light leading-none">0</span><div id="spark" style="width:140px;height:60px"></div></div>
+          <p id="bigsub" class="text-xs text-gray-500 mt-2"></p></div>
+        <div id="cards" class="col-span-2 grid grid-cols-2 gap-4"></div>
+      </div>
+    </div>
+    <div class="dist p-5">
+      <h3 id="dtitle" class="text-lg font-medium"></h3><p id="dsub" class="text-xs text-gray-600 mb-2"></p>
+      <div id="main" style="height:340px"></div>
+    </div>
+  </section>
+</div>
+
+<div class="main p-5 mt-4">
+  <h3 class="font-medium mb-2">What I solved</h3>
+  <ul class="text-sm text-gray-600 list-disc ml-5 space-y-1">
+    <li>Loaded 5 season files into staging and verified counts per season.</li>
+    <li>Built typed <code>clean_ipl</code> with parsed dates and over/ball split.</li>
+    <li>Fixed inconsistent player names with a <code>player_alias</code> table, LEFT JOIN and COALESCE.</li>
+    <li>One Python script runs every SQL file and exports JSON for the charts.</li>
+  </ul>
+</div>
+</div></div>
+
+<script>
+const PAL=["#2b2d35","#6f7488","#9aa0c4","#b9bfe6","#7cc4a0","#e9a98f","#f2d27a"];
+const J=u=>fetch(u).then(r=>r.json());
+const files=["runs_per_season","top_run_scorers","top_wickets","venue_runs","wicket_types","phase_run_rate"];
+Promise.all(files.map(f=>J("data/"+f+".json"))).then(a=>init(Object.fromEntries(files.map((f,i)=>[f,a[i]]))));
+
+function init(D){
+  const S=D.runs_per_season,total=S.reduce((a,r)=>a+r.value,0);
+  let sel=S.length-1,metric="top_run_scorers",type="bar";
+  const META={top_run_scorers:["Top run scorers","Batters with the most runs (aliases merged)","🏏"],
+    top_wickets:["Top wicket takers","Run outs and retirements excluded","🎯"],
+    runs_per_season:["Runs per season","Total runs scored each year","📈"],
+    venue_runs:["Venues by runs","Top 12 grounds","🏟️"],
+    wicket_types:["How batters get out","Dismissal types","☝️"],
+    phase_run_rate:["Run rate by phase","Runs per over","⚡"]};
+
+  // season strip
+  const strip=document.getElementById("strip");
+  strip.innerHTML=S.map((r,i)=>`<div class="seg" data-i="${i}"><p class="pct">${(r.value*100/total).toFixed(0)}%</p><p class="lab">${r.label}</p><div class="ticks"></div></div>`).join("");
+  strip.querySelectorAll(".seg").forEach(s=>s.onclick=()=>{sel=+s.dataset.i;kpi()});
+
+  // phase cards
+  const wk=D.wicket_types.reduce((a,r)=>a+r.value,0);
+  document.getElementById("cards").innerHTML=[...D.phase_run_rate.map(r=>[r.label+" run rate",r.value.toFixed(1),"per over"]),["Wickets",wk.toLocaleString(),"all dismissals"]]
+    .map(c=>`<div><p class="text-sm text-gray-500">${c[0]} <span class="tag">${c[2]}</span></p><p class="text-4xl font-light mt-1">${c[1]}</p></div>`).join("");
+
+  // sparkline + big number
+  const spark=echarts.init(document.getElementById("spark"));
+  function kpi(){
+    strip.querySelectorAll(".seg").forEach((s,i)=>s.classList.toggle("on",i==sel));
+    big.textContent=Math.round(S[sel].avg_per_match);
+    bigsub.textContent="Season "+S[sel].label+" · both innings combined";
+    spark.setOption({grid:{left:0,right:0,top:8,bottom:8},xAxis:{type:"category",show:false,data:S.map(r=>String(r.label))},yAxis:{type:"value",show:false,scale:true},
+      series:[{type:"line",smooth:true,symbol:"none",lineStyle:{color:"#2b2d35",width:2},
+        data:S.map((r,i)=>({value:r.avg_per_match,symbol:i==sel?"circle":"none",symbolSize:9,itemStyle:{color:"#2b2d35"}}))}]});
+  }
+
+  // chart types
+  const T=[["bar","▥","Bar"],["line","⌇","Line"],["pie","◔","Pie"],["donut","◎","Donut"]];
+  const types=document.getElementById("types");
+  types.innerHTML=T.map(t=>`<div class="ct" data-t="${t[0]}"><i>${t[1]}</i>${t[2]}</div>`).join("");
+  types.querySelectorAll(".ct").forEach(e=>e.onclick=()=>{type=e.dataset.t;draw()});
+
+  // metrics
+  const mets=document.getElementById("mets");
+  mets.innerHTML=Object.entries(META).map(([k,m])=>`<button class="met" data-k="${k}"><span style="font-size:18px">${m[2]}</span><div><b>${m[0]}</b><span>${m[1]}</span></div></button>`).join("");
+  mets.querySelectorAll(".met").forEach(e=>e.onclick=()=>{metric=e.dataset.k;draw()});
+
+  // main chart (hatched patterns via aria.decal)
+  const main=echarts.init(document.getElementById("main"));
+  function draw(){
+    types.querySelectorAll(".ct").forEach(e=>e.classList.toggle("on",e.dataset.t==type));
+    mets.querySelectorAll(".met").forEach(e=>e.classList.toggle("on",e.dataset.k==metric));
+    dtitle.textContent=META[metric][0];dsub.textContent=META[metric][1];
+    const d=D[metric],pie=type=="pie"||type=="donut";
+    const o={backgroundColor:"transparent",color:PAL,aria:{enabled:true,decal:{show:true}},animationDuration:900,
+      tooltip:{trigger:pie?"item":"axis"}};
+    if(pie)o.series=[{type:"pie",radius:type=="donut"?["42%","70%"]:"70%",itemStyle:{borderRadius:8,borderColor:"#d5d9f7",borderWidth:3},
+      label:{color:"#333",fontSize:11},data:d.map(r=>({name:String(r.label),value:r.value}))}];
+    else{
+      o.grid={left:45,right:15,top:20,bottom:65};
+      o.xAxis={type:"category",data:d.map(r=>String(r.label)),axisLabel:{interval:0,rotate:30,width:90,overflow:"truncate",fontSize:10,color:"#444"}};
+      o.yAxis={type:"value",splitLine:{lineStyle:{color:"#b9bfe6"}},axisLabel:{color:"#555"}};
+      o.series=[type=="line"
+        ?{type:"line",smooth:true,symbolSize:10,lineStyle:{width:4,color:"#2b2d35"},itemStyle:{color:"#2b2d35"},areaStyle:{color:"rgba(43,45,53,.12)"},data:d.map(r=>r.value)}
+        :{type:"bar",colorBy:"data",barWidth:"55%",itemStyle:{borderRadius:[14,14,6,6]},data:d.map(r=>r.value)}];
+    }
+    main.setOption(o,true);
+  }
+  addEventListener("resize",()=>{main.resize();spark.resize()});
+  kpi();draw();
+}
+</script></body></html>
